@@ -31,10 +31,14 @@ function create() {
     
     g.boy.inputEnabled = true;
     g.boy.input.enableDrag();
+    
+    var style = {font: '18px arial', fill:'#000'}
+    g.volUI = g.add.text(20, 310, 'Volume: ', style);
 }
 
 function update() {
     changeVolume();
+    uiUpdate();
 }
 
 function changeVolume() {
@@ -48,4 +52,11 @@ function changeVolume() {
     console.log(vol);
     
     g.girl.sound.volume = vol;
+}
+
+function uiUpdate() {
+    let g = game;
+    let percent = Math.floor(g.girl.sound.volume * 100);
+    
+    g.volUI.text = 'Volume: ' + percent + '%';
 }
