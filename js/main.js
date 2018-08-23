@@ -1,5 +1,5 @@
-var gWid = 640;
-var gHig = 360;
+var gWid = 600;
+var gHig = 600;
 var game = new Phaser.Game(gWid, gHig, Phaser.Auto);
 
 game.state.add('gameState', gameState);
