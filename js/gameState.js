@@ -33,7 +33,7 @@ function preload() {
         [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ];
     
-    g.newMap = [];
+    g.nodes = [];
 }
 
 function create() {
@@ -69,11 +69,11 @@ function create() {
     
     var line = new Phaser.Line(100, 100, 500, 500);
     
-    g.newMap = g.map.map(function(v,i) {
+    g.nodes = g.map.map(function(v,i) {
         let y = i;
         let xarr = v.map(function(v2, i2) {
             let x = i2;
-            return {x: i2, y:i, value:v2, open: undefined};
+            return {position: {x: i2, y:i}, type:v2, f:0, g:0, h:0, visited: undefined, parent: undefined};
         })
         
         return xarr;
@@ -123,14 +123,9 @@ function moveBoy(o, pointer) {
     
     console.log(p);
     
-    // if(seeThere(p) != 1) {
-    //     let newP = {x: p.x*30, y: p.y*30};
-    //     let moveTo = g.add.tween(g.boy);
-    //     moveTo.to({x: newP.x, y:newP.y}, 3000);
-    //     moveTo.start();
-    // }
-    
-    let path = findPath(pointer);
+    if(g.nodes[p.y][p.x].type != 1) {
+        let path = findPath(pointer);
+    }
 }
 
 function findPath(dest) {
@@ -143,8 +138,6 @@ function findPath(dest) {
     var path = astar(st, de);
     
     drawLine(path);
-    console.log('findPath: ');
-    console.log(path);
 }
 
 function drawLine(path) {
@@ -153,48 +146,26 @@ function drawLine(path) {
     let last = path[path.length-1];
     var linesX = [];
     var linesY = [];
-
+    
     while(last != first) {
-        let temp = last.parent;
+        linesX.push(last.position.x * 30);
+        linesY.push(last.position.y * 30);
         
-        linesX.push(last.position.x*30);
-        linesY.push(last.position.y*30);
-        last = temp;
+        last = last.parent;
     }
     
-    var mov = g.add.tween(g.boy);
-    
     console.log(linesX.reverse());
-    console.log(linesY.reverse());
+    console.log(linesY.reverse())
     
+    var mov = g.add.tween(g.boy);    
     mov.to({x: linesX, y: linesY}, 500);
     mov.start();
 }
 
-function Node(position) {
-    this.position = position;
-    this.id = position.x + game.map[0].length * position.y;
-    this.parent = this;
-    this.g = 10;
-    this.h = 0;
-    this.f = 0;
-}
-Node.prototype.addParent = function(Node) {
-    this.parent = Node;
-}
-Node.prototype.calculate = function(Node, Move) {
-    let dest = Node.position;
-    let now = this.position;
-    
-    this.g = Move;
-    this.h = (Math.abs(dest.x - now.x) + Math.abs(dest.y-now.y))*10;
-    this.f = this.g + this.h;
-}
-
 function astar(coFrom, coTo) {
     let g = game;
-    let firstNode = g.newMap[coFrom.y][coFrom.x];
-    let destNode = g.newMap[coTo.y][coTo.x];
+    let firstNode = g.nodes[coFrom.y][coFrom.x];
+    let destNode = g.nodes[coTo.y][coTo.x];
     let openList = [];
     let closeList= [];
     let dx = [1, 1, 0, -1, -1, -1, 0, 1];
@@ -203,61 +174,58 @@ function astar(coFrom, coTo) {
     let working = true;
     
     openList.push(firstNode);
-    g.map2[coFrom.x, coFrom.y];
     
     //while(working) {
-    for(var num = 0; num < 2000; num++) {
-        // get a node
-        let v = openList.reduce(function(prev, cur) {
+    for(var num = 0; num < 100; num++) {
+        // get the node having minimun of f-value from openlist.
+        let current = openList.reduce(function(prev, cur) {
             return prev.f > cur.f ? cur : prev;
         });
-        let gid = openList.indexOf(v);
+
+        // remove the node from the openlist and add it the closelist.
+        let gid = openList.indexOf(current);
         openList.splice(gid,1);
-        closeList.push(v);
+        closeList.push(current);
         
-        // find adjacent nodes
+        // find adjacent nodes of the selected node
         for(var n=0;n<8;n++) {
-            let nx = v.position.x + dx[n];
-            let ny = v.position.y + dy[n];
+            let nx = current.position.x + dx[n];
+            let ny = current.position.y + dy[n];
+            let _node = g.nodes[ny][nx];
             
-            if(g.map2[ny][nx] == 0) {               
-                var node = new Node({x: nx, y: ny});
-                node.calculate(destNode, ms[n]);
-                node.addParent(v);
-            }
-            else {
-                var ns = openlist.filter(function(e) {
-                    if(e.position.x == nx && e.position.y == ny) {
-                        return e;
+            if(_node.type != 1 && closeList.indexOf(_node) == -1) {
+                if(openList.indexOf(_node) == -1) {
+                    _node.g = ms[n];
+                    _node.h = (Math.abs(destNode.position.x - _node.position.x) + Math.abs(destNode.position.y - _node.position.y))*10;
+                    _node.f = _node.g + _node.h;
+                    _node.parent = current;
+                    openList.push(_node);
+                }
+                else {
+                    let currentG = current.g;
+                    let prevG = ms[n];
+                    
+                    if (currentG + prevG < _node.g) {
+                        _node.g = currentG + prevG;
+                        _node.f = _node.g + _node.h;
+                        _node.parent = current;
                     }
-                });
-                
-                var node = ns[0];
-            }
-            if(g.map[ny][nx] != 1 && closeList.indexOf(node) == -1) {
-                node.calculate(destNode, ms[n]);
-                openList.push(node);
-            }
-            else {
-                if(closeList.indexOf(node) == -1) closeList.push(node);
+                }
             }
         }
-        
+                
+        console.log('closed list' + ' [' + num + ']')
+        console.log(closeList);
+                
         // is the destination node in openList?
-        var res = openList.filter(function(e) {
-            if(e.id == destNode.id) {
-                return e;
-            }
-        });
+        var res = openList.indexOf(destNode);
         
-        if(res.length > 0) {
-            closeList.push(res[0]);
-            console.log('find? destNode is..');
-            console.log(destNode)
+        if(res != -1) {
+            closeList.push(openList[res]);
             working = false;
             break;
         }
     }
-    
+
     return closeList;
 }
