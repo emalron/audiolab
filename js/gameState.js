@@ -109,16 +109,21 @@ function update() {
 
 function popupGirl() {
     let g = game;
-    if(g.girl.occupied) {
-        g.crates[g.girl.rnd].destroy();
-        g.crates.splice(g.girl.rnd, 1);
-    }
-    g.girl.occupied = true;
+    if(g.crates.length > 1) {
+        if(g.girl.occupied) {
+            g.crates[g.girl.rnd].destroy();
+            g.crates.splice(g.girl.rnd, 1);
+        }
+        g.girl.occupied = true;
 
-    g.girl.rnd = Math.floor(Math.random() * g.crates.length);
-    let dest = g.crates[g.girl.rnd];
-    
-    g.girl.position = dest;
+        g.girl.rnd = Math.floor(Math.random() * g.crates.length);
+        let dest = g.crates[g.girl.rnd];
+
+        g.girl.position = dest;
+    }
+    else {
+        console.log('you lost');
+    }
 }
 
 function displaySound(path) {
