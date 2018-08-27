@@ -64,7 +64,6 @@ function create() {
     let girlLoc = getCoordinate(g.girl);
     g.map[girlLoc.y][girlLoc.x] = 2;
     
-    
     g.boy.inputEnabled = true;
     g.boy.input.enableDrag();
     
