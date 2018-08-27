@@ -64,9 +64,10 @@ function create() {
     let girlLoc = getCoordinate(g.girl);
     g.map[girlLoc.y][girlLoc.x] = 2;
     
-    
     g.boy.inputEnabled = true;
     g.boy.input.enableDrag();
+    
+    g.liner = g.add.graphics(0,0);
     
     var style = {font: '18px arial', fill:'#f00'}
     g.volUI = g.add.text(35, 548, 'Volume: ', style);
@@ -81,11 +82,34 @@ function create() {
         
         return xarr;
     })
+    
+    displaySound();
 }
 
 function update() {
     changeVolume();
     uiUpdate();
+}
+
+function displaySound(path) {
+    let g = game;
+    let line = [];
+    
+    for(var i=0; i<path.x.length; i++) {
+        let point = {x: path.x[i], y: path.y[i]}
+        line.push(point);
+    }
+    
+    g.liner.clear();
+    g.liner.lineStyle(2, 0x008800, 1);
+    // for(var i=0; i<path.length; i++) {
+    //     
+    // }
+    line.reverse();
+    g.liner.moveTo(line[0].x, line[0].y);
+    for(var j=1;j<line.length;j++) {
+        g.liner.lineTo(line[j].x, line[j].y);
+    }
 }
 
 function wallChange() {
@@ -129,11 +153,14 @@ function changeVolume() {
     let bp = getCoordinate(g.boy.position);
     
     let clist = astar(gp, bp);
-    let dist = drawLine(clist).x.length*30;
+    let path = drawLine(clist);
+    let dist = path.x.length*30;
     
     let vol = 1 - dist/1000;
     
     g.girl.sound.volume = vol;
+    
+    displaySound(path);
 }
 
 function uiUpdate() {
