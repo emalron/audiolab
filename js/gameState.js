@@ -68,8 +68,11 @@ function create() {
     g.girl.anchor.setTo(.5);
     g.girl.sound = g.add.audio('talking');
     g.girl.sound.loopFull();
-    let girlLoc = getCoordinate(g.girl);
-    g.map[girlLoc.y][girlLoc.x] = 2;
+    g.girl.timer = game.time.create(false);
+    g.girl.timer.loop(5*1000, popupGirl);
+    g.girl.timer.start();
+    g.girl.occupied = false;
+    popupGirl();
     
     g.liner = g.add.graphics(0,0);
     
@@ -93,6 +96,20 @@ function create() {
 function update() {
     changeVolume();
     uiUpdate();
+}
+
+function popupGirl() {
+    let g = game;
+    if(g.girl.occupied) {
+        g.crates[g.girl.rnd].destroy();
+        g.crates.splice(g.girl.rnd, 1);
+    }
+    g.girl.occupied = true;
+
+    g.girl.rnd = Math.floor(Math.random() * g.crates.length);
+    let dest = g.crates[g.girl.rnd];
+    
+    g.girl.position = dest;
 }
 
 function displaySound(path) {
@@ -165,7 +182,7 @@ function changeVolume() {
     
     g.girl.sound.volume = vol;
     
-    // displaySound(path);
+    displaySound(path);
 }
 
 function uiUpdate() {
