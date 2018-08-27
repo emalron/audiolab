@@ -1,4 +1,13 @@
 var gameState = {preload: preload, create: create, update: update};
+var gui = new dat.GUI();
+var Option = function() {
+    this.path_visible = false;
+};
+var option = new Option();
+
+
+gui.add(option, 'path_visible');
+
 
 function preload() {
     let g = game;
@@ -165,7 +174,12 @@ function changeVolume() {
     
     g.girl.sound.volume = vol;
     
-    // displaySound(path);
+    if(option.path_visible) {
+        displaySound(path)
+    }
+    else {
+        g.liner.clear();
+    }
 }
 
 function uiUpdate() {
