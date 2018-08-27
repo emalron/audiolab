@@ -8,6 +8,7 @@ function preload() {
     g.load.image('boy', 'assets/images/cook.png');
     g.load.image('girl', 'assets/images/customer.png');
     g.load.audio('talking', 'assets/audio/talking.mp3');
+    g.load.image('crate', 'assets/images/crate.png');
     
     g.map = [
         [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -48,24 +49,27 @@ function create() {
     g.wall.events.onInputDown.add(wallChange);
     g.wall.states = 0;
     
+    // make crates array
+    var cratesLocation = [{x: 34, y:47}, {x: 232, y:183}, {x: 329, y:43}, {x:240, y:343}, {x: 549, y: 318}, {x: 63, y: 478}, {x: 317, y:561}, {x: 546, y: 437}]
+    g.crates = [];
+    
+    cratesLocation.forEach((v,i) => {
+        var crate = g.add.sprite(v.x, v.y, 'crate');
+        crate.anchor.setTo(.5);
+        g.crates.push(crate);
+    });
+    
     g.boy = g.add.sprite(100, 100, 'boy');
     g.boy.anchor.setTo(.5);
-    g.girl = g.add.sprite(465,157, 'girl');
-    var g2 = g.add.sprite(415, 137, 'girl');
-    g2.anchor.setTo(.5);
-    g2.scale.setTo(-1, 1);
-    var g3 = g.add.sprite(425, 197, 'girl');
-    g3.anchor.setTo(.5);
-    g3.scale.setTo(-1, 1);
+    g.boy.inputEnabled = true;
+    g.boy.input.enableDrag();
     
+    g.girl = g.add.sprite(465,157, 'girl');    
     g.girl.anchor.setTo(.5);
     g.girl.sound = g.add.audio('talking');
     g.girl.sound.loopFull();
     let girlLoc = getCoordinate(g.girl);
     g.map[girlLoc.y][girlLoc.x] = 2;
-    
-    g.boy.inputEnabled = true;
-    g.boy.input.enableDrag();
     
     g.liner = g.add.graphics(0,0);
     
@@ -161,7 +165,7 @@ function changeVolume() {
     
     g.girl.sound.volume = vol;
     
-    displaySound(path);
+    // displaySound(path);
 }
 
 function uiUpdate() {
