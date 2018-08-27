@@ -94,9 +94,10 @@ function update() {
 function displaySound(path) {
     let g = game;
     let line = [];
+    let _path = path;
     
-    for(var i=0; i<path.x.length; i++) {
-        let point = {x: path.x[i], y: path.y[i]}
+    for(var i=0; i<_path.x.length; i++) {
+        let point = {x: _path.x[i], y: _path.y[i]}
         line.push(point);
     }
     
@@ -240,8 +241,8 @@ function astar(coFrom, coTo) {
     
     openList.push(firstNode);
     
-    //while(working) {
-    for(var num = 0; num < 100; num++) {
+    while(openList.length > 0) {
+    //for(var num = 0; num < 1000; num++) {
         // get the node having minimun of f-value from openlist.
         let current = openList.reduce(function(prev, cur) {
             return prev.f > cur.f ? cur : prev;
@@ -251,7 +252,7 @@ function astar(coFrom, coTo) {
         let gid = openList.indexOf(current);
         openList.splice(gid,1);
         closeList.push(current);
-        
+                
         // find adjacent nodes of the selected node
         for(var n=0;n<8;n++) {
             let nx = current.position.x + dx[n];
@@ -260,15 +261,15 @@ function astar(coFrom, coTo) {
             
             if(_node.type != 1 && closeList.indexOf(_node) == -1) {
                 if(openList.indexOf(_node) == -1) {
-                    _node.g = ms[n];
+                    _node.g = ms[n] + current.g;
                     _node.h = (Math.abs(destNode.position.x - _node.position.x) + Math.abs(destNode.position.y - _node.position.y))*10;
                     _node.f = _node.g + _node.h;
                     _node.parent = current;
                     openList.push(_node);
                 }
                 else {
-                    let currentG = current.g;
-                    let prevG = ms[n];
+                    let prevG = current.g;
+                    let currentG = ms[n];
                     
                     if (currentG + prevG < _node.g) {
                         _node.g = currentG + prevG;
@@ -278,7 +279,7 @@ function astar(coFrom, coTo) {
                 }
             }
         }
-                
+        
         // is the destination node in openList?
         var res = openList.indexOf(destNode);
         
@@ -287,6 +288,7 @@ function astar(coFrom, coTo) {
             working = false;
             break;
         }
+
     }
 
     return closeList;
