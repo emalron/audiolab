@@ -2,11 +2,13 @@ var gameState = {preload: preload, create: create, update: update};
 var gui = new dat.GUI();
 var Option = function() {
     this.path_visible = false;
+    this.boy_velocity = 3;
 };
 var option = new Option();
 
 
 gui.add(option, 'path_visible');
+gui.add(option, 'boy_velocity', 0, 10);
 
 
 function preload() {
@@ -112,16 +114,16 @@ function getInput() {
     let g = game;
     
     if(game.input.keyboard.isDown(Phaser.KeyCode.A)) {
-        g.boy.position.x -= 3;
+        g.boy.position.x -= option.boy_velocity;
     }
     else if (game.input.keyboard.isDown(Phaser.KeyCode.D)) {
-        g.boy.position.x += 3;
+        g.boy.position.x += option.boy_velocity;
     }
     else if (game.input.keyboard.isDown(Phaser.KeyCode.S)) {
-        g.boy.position.y += 3;
+        g.boy.position.y += option.boy_velocity;
     }
     else if (game.input.keyboard.isDown(Phaser.KeyCode.W)) {
-        g.boy.position.y -= 3;
+        g.boy.position.y -= option.boy_velocity;
     }
 }
 
