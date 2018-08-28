@@ -2,7 +2,7 @@ var gameState = {preload: preload, create: create, update: update};
 var gui = new dat.GUI();
 var Option = function() {
     this.path_visible = false;
-    this.boy_velocity = 3;
+    this.boy_velocity = 10;
 };
 var option = new Option();
 
@@ -114,17 +114,52 @@ function getInput() {
     let g = game;
     
     if(game.input.keyboard.isDown(Phaser.KeyCode.A)) {
-        g.boy.position.x -= option.boy_velocity;
+        if(collisionDetection('LEFT')) g.boy.position.x -= option.boy_velocity;
     }
     else if (game.input.keyboard.isDown(Phaser.KeyCode.D)) {
-        g.boy.position.x += option.boy_velocity;
+        if(collisionDetection('RIGHT')) g.boy.position.x += option.boy_velocity;
     }
     else if (game.input.keyboard.isDown(Phaser.KeyCode.S)) {
-        g.boy.position.y += option.boy_velocity;
+        if(collisionDetection('DOWN')) g.boy.position.y += option.boy_velocity;
     }
     else if (game.input.keyboard.isDown(Phaser.KeyCode.W)) {
-        g.boy.position.y -= option.boy_velocity;
+        if(collisionDetection('UP')) g.boy.position.y -= option.boy_velocity;
     }
+}
+
+function collisionDetection(direction) {
+    // check collision between boy and walls
+    let g = game;
+    let radius = g.boy.width/2;
+    let pos = g.boy.position;
+    
+    //
+    switch(direction) {
+        case 'LEFT':
+            if(pos.x < radius) {
+                return false;
+            }
+            break;
+            
+        case 'RIGHT':
+            if(pos.x > g.world.width-radius) {
+                return false;
+            }
+            break;
+            
+        case 'UP':
+            if(pos.y < radius) {
+                return false;
+            }
+            break;
+        case 'DOWN':
+            if(pos.y > g.world.height-radius) {
+                return false;
+            }
+            break;
+    }
+    
+    return true;   
 }
 
 function popupGirl() {
