@@ -103,8 +103,26 @@ function create() {
 }
 
 function update() {
+    getInput();
     changeVolume();
     uiUpdate();
+}
+
+function getInput() {
+    let g = game;
+    
+    if(game.input.keyboard.isDown(Phaser.KeyCode.A)) {
+        g.boy.position.x -= 3;
+    }
+    else if (game.input.keyboard.isDown(Phaser.KeyCode.D)) {
+        g.boy.position.x += 3;
+    }
+    else if (game.input.keyboard.isDown(Phaser.KeyCode.S)) {
+        g.boy.position.y += 3;
+    }
+    else if (game.input.keyboard.isDown(Phaser.KeyCode.W)) {
+        g.boy.position.y -= 3;
+    }
 }
 
 function popupGirl() {
