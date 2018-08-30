@@ -53,12 +53,14 @@ function create() {
     
     // draw entities
     g.background = g.add.sprite(0,0,'bg');
-    // g.background.inputEnabled = true;
-    // g.background.events.onInputDown.add(moveBoy);
-    g.wall = g.add.sprite(278,188,'wall');
+    g.bwall1 = {position: {x:(278+6.5), y:187/2}, height: 187, width: 13, key: 'bwall1'};
+    g.bwall2 = {position: {x:(278+6.5), y:187+77+50}, height: 100, width: 13, key: 'bwall2'};
+    g.bwall3 = {position: {x:(392+600)/2, y:360+13/2}, height: 13, width: 600-392, key: 'bwall3'};
+    g.wall = g.add.sprite(278+6.5,188+77/2,'wall');
     g.wall.inputEnabled = true;
     g.wall.events.onInputDown.add(wallChange);
     g.wall.states = 0;
+    g.wall.anchor.setTo(.5);
     
     // make crates array
     var cratesLocation = [{x: 34, y:47}, {x: 232, y:183}, {x: 329, y:43}, {x:240, y:343}, {x: 549, y: 318}, {x: 63, y: 478}, {x: 317, y:561}, {x: 546, y: 437}]
@@ -73,7 +75,7 @@ function create() {
     g.boy = g.add.sprite(100, 100, 'boy');
     g.boy.anchor.setTo(.5);
     g.boy.inputEnabled = true;
-    g.boy.input.enableDrag();
+    // g.boy.input.enableDrag();
     
     g.girl = g.add.sprite(465,157, 'girl');    
     g.girl.anchor.setTo(.5);
@@ -84,6 +86,13 @@ function create() {
     g.girl.timer.start();
     g.girl.occupied = false;
     popupGirl();
+    
+    g.collidable = [];
+    g.collidable.push(g.girl);
+    g.collidable.push(g.wall);
+    g.collidable.push(g.bwall1);
+    g.collidable.push(g.bwall2);
+    g.collidable.push(g.bwall3);
     
     g.liner = g.add.graphics(0,0);
     
@@ -110,56 +119,107 @@ function update() {
     uiUpdate();
 }
 
+var inputEnable = true;
+var dt = 0;
+var prevt = 0;
+var curt = 0;
+
 function getInput() {
     let g = game;
+    let v = option.boy_velocity;
+    let oldPosition = g.boy.position;
     
-    if(game.input.keyboard.isDown(Phaser.KeyCode.A)) {
-        if(collisionDetection('LEFT')) g.boy.position.x -= option.boy_velocity;
-    }
-    else if (game.input.keyboard.isDown(Phaser.KeyCode.D)) {
-        if(collisionDetection('RIGHT')) g.boy.position.x += option.boy_velocity;
-    }
-    else if (game.input.keyboard.isDown(Phaser.KeyCode.S)) {
-        if(collisionDetection('DOWN')) g.boy.position.y += option.boy_velocity;
-    }
-    else if (game.input.keyboard.isDown(Phaser.KeyCode.W)) {
-        if(collisionDetection('UP')) g.boy.position.y -= option.boy_velocity;
+    if(inputEnable) {
+        if(game.input.keyboard.isDown(Phaser.KeyCode.A)) {
+            oldPosition = g.boy.position;
+            var col = collideSearch({x:-v, y:0});
+            console.log(col);
+            if(col == true) {
+               g.boy.position.x -= option.boy_velocity;
+            }
+            else {
+                g.boy.position = oldPosition;
+            }
+            
+            inputEnable = true;
+        }
+        else if (game.input.keyboard.isDown(Phaser.KeyCode.D)) {
+            oldPosition = g.boy.position;
+            if(collideSearch({x: v, y:0})) { 
+                g.boy.position.x += option.boy_velocity;
+            }
+            else {
+                g.boy.position = oldPosition;
+            }
+            inputEnable = true;
+        }
+        else if (game.input.keyboard.isDown(Phaser.KeyCode.S)) {
+            oldPosition = g.boy.position;
+            if(collideSearch({x:0, y:v})) {
+                g.boy.position.y += option.boy_velocity;
+            }
+            else {
+                g.boy.position = oldPosition;
+            }
+            inputEnable = true;
+        }
+        else if (game.input.keyboard.isDown(Phaser.KeyCode.W)) {
+            oldPosition = g.boy.position;
+            if(collideSearch({x:0, y:-v})) {
+                g.boy.position.y -= option.boy_velocity;
+            }
+            else {
+                g.boy.position = oldPosition;
+            }
+            inputEnable = true;
+        }
     }
 }
 
-function collisionDetection(direction) {
-    // check collision between boy and walls
+function collideSearch(nPos) {
     let g = game;
     let radius = g.boy.width/2;
-    let pos = g.boy.position;
+    let _pos = g.boy.position;
+    let pos = {x: _pos.x+nPos.x, y:_pos.y+nPos.y};
     
-    //
-    switch(direction) {
-        case 'LEFT':
-            if(pos.x < radius) {
-                return false;
-            }
-            break;
-            
-        case 'RIGHT':
-            if(pos.x > g.world.width-radius) {
-                return false;
-            }
-            break;
-            
-        case 'UP':
-            if(pos.y < radius) {
-                return false;
-            }
-            break;
-        case 'DOWN':
-            if(pos.y > g.world.height-radius) {
-                return false;
-            }
-            break;
+    if(pos.x < radius || pos.x > g.world.width-radius || pos.y < radius || pos.y > g.world.height - radius) {
+        console.log('hit the boundaries');
+        return false;
     }
-    
-    return true;   
+        
+    for(var i=0; i < g.collidable.length; i++) {
+        let v = g.collidable[i]
+        
+        let _tpos = v.position;
+        let _thr = v.height/2;
+        let _twr = v.width/2;
+        
+        let bl = pos.x - radius;
+        let br = pos.x + radius;
+        let bt = pos.y - radius;
+        let bb = pos.y + radius;
+        
+        let tl = _tpos.x - _twr;
+        let tr = _tpos.x + _twr;
+        let tt = _tpos.y - _thr;
+        let tb = _tpos.y + _thr;
+        
+        // horizontally collision
+        // case 1: boy(left), object(right) br < tr
+        // case 2: boy(right), object(left) else
+        
+        // vertically collision
+        // case 1: boy(bottom), object(top) bt > tt
+        // case 2: boy(top), object(bottom) else
+        
+        if (tl < br && bl < tr && bt < tb && tt < bb) {
+            inputEnable = false;
+            
+            console.log(v.key);
+            return false;
+        }
+    }
+    return true;
 }
 
 function popupGirl() {
