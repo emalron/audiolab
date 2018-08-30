@@ -4,8 +4,9 @@ var Option = function() {
     this.path_visible = false;
     this.show_volume = false;
     this.boy_velocity = 10;
-    this.girl_velocity = 3;
+    this.girl_velocity = 15;
     this.volume_denom = 600;
+    this.search_radius = 80;
 };
 var option = new Option();
 
@@ -93,10 +94,11 @@ function create() {
     g.girl.timer.start();
     g.girl.occupied = false;
     g.girl.hp = 3;
+    g.girl.alpha = 0;
     popupGirl();
     
     g.collidable = [];
-    g.collidable.push(g.girl);
+//    g.collidable.push(g.girl);
     g.collidable.push(g.wall);
     g.collidable.push(g.bwall1);
     g.collidable.push(g.bwall2);
@@ -185,7 +187,21 @@ function getInput(key) {
             inputEnable = true;
         }
         else if (game.input.keyboard.justPressed(Phaser.KeyCode.SPACEBAR)) {
-            g.girl.hp -= 1;
+            let dist = Math.sqrt(Math.pow(g.boy.x-g.girl.x, 2) + Math.pow(g.boy.y-g.girl.y,2));
+            let showGirl = g.add.tween(g.girl);
+            if(dist <= option.search_radius) {
+                g.girl.hp -= 1;
+                g.girl.alpha = 1;
+                showGirl.to({alpha: 0}, 500);
+                showGirl.start();
+                showGirl.onComplete.add(function() {
+                    g.occupied = false;
+                    g.girl.rnd = Math.floor(Math.random() * g.crates.length);
+                    let dest = g.crates[g.girl.rnd];
+                    
+                    g.girl.position = dest;
+                }, this);
+            }
         }
     }
 }
