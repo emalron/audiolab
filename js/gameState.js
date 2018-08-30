@@ -2,13 +2,20 @@ var gameState = {preload: preload, create: create, update: update};
 var gui = new dat.GUI();
 var Option = function() {
     this.path_visible = false;
+    this.show_volume = false;
     this.boy_velocity = 10;
+    this.girl_velocity = 3;
+    this.volume_denom = 600;
 };
 var option = new Option();
 
 
 gui.add(option, 'path_visible');
+gui.add(option, 'show_volume');
 gui.add(option, 'boy_velocity', 0, 10);
+gui.add(option, 'girl_velocity', 0, 20);
+gui.add(option, 'volume_denom', 0, 848);
+
 
 
 function preload() {
@@ -82,9 +89,10 @@ function create() {
     g.girl.sound = g.add.audio('talking');
     g.girl.sound.loopFull();
     g.girl.timer = game.time.create(false);
-    g.girl.timer.loop(5*1000, popupGirl);
+    g.girl.timer.loop(option.girl_velocity*1000, popupGirl);
     g.girl.timer.start();
     g.girl.occupied = false;
+    g.girl.hp = 3;
     popupGirl();
     
     g.collidable = [];
@@ -98,6 +106,8 @@ function create() {
     
     var style = {font: '18px arial', fill:'#f00'}
     g.volUI = g.add.text(35, 548, 'Volume: ', style);
+    g.crateUI = g.add.text(484, 10, 'Crates: ', style);
+    g.ghostUI = g.add.text(488, 30, 'Ghost: ', style);
     
     // remapping the map data to node data
     g.nodes = g.map.map(function(v,i) {
@@ -124,13 +134,14 @@ var dt = 0;
 var prevt = 0;
 var curt = 0;
 
-function getInput() {
+function getInput(key) {
     let g = game;
     let v = option.boy_velocity;
     let oldPosition = g.boy.position;
     
     if(inputEnable) {
         if(game.input.keyboard.isDown(Phaser.KeyCode.A)) {
+//        if(key.KeyCode == Phaser.KeyCode.A) {
             oldPosition = g.boy.position;
             var col = collideSearch({x:-v, y:0});
             console.log(col);
@@ -172,6 +183,9 @@ function getInput() {
                 g.boy.position = oldPosition;
             }
             inputEnable = true;
+        }
+        else if (game.input.keyboard.justPressed(Phaser.KeyCode.SPACEBAR)) {
+            g.girl.hp -= 1;
         }
     }
 }
@@ -224,11 +238,13 @@ function collideSearch(nPos) {
 
 function popupGirl() {
     let g = game;
-    if(g.crates.length > 1) {
-        if(g.girl.occupied) {
-            g.crates[g.girl.rnd].destroy();
-            g.crates.splice(g.girl.rnd, 1);
-        }
+    
+    if(g.girl.occupied) {
+        g.crates[g.girl.rnd].destroy();
+        g.crates.splice(g.girl.rnd, 1);
+    }
+    
+    if(g.crates.length >= 1) {
         g.girl.occupied = true;
 
         g.girl.rnd = Math.floor(Math.random() * g.crates.length);
@@ -237,6 +253,7 @@ function popupGirl() {
         g.girl.position = dest;
     }
     else {
+        g.girl.occupied = false;
         console.log('you lost');
     }
 }
@@ -289,7 +306,7 @@ function wallChange() {
             g.nodes[8][10].type = 0;
             g.nodes[9][9].type = 0;
             g.nodes[9][10].type = 0;
-            g.wall.alpha = .5;
+            g.wall.alpha = .5;            
             break;
     }
 }
@@ -307,7 +324,7 @@ function changeVolume() {
     let path = drawLine(clist);
     let dist = path.x.length*30;
     
-    let vol = 1 - dist/1000;
+    let vol = Math.max(0,1 - dist/option.volume_denom);
     
     g.girl.sound.volume = vol;
     
@@ -323,7 +340,9 @@ function uiUpdate() {
     let g = game;
     let percent = Math.floor(g.girl.sound.volume * 100);
     
-    g.volUI.text = 'Volume: ' + percent + '%';
+    if(option.show_volume) g.volUI.text = 'Volume: ' + percent + '%';
+    g.crateUI.text = 'Crates: ' + g.crates.length + '/8';
+    g.ghostUI.text = 'Ghost: ' + g.girl.hp + '/3';
 }
 
 function getCoordinate(position) {
