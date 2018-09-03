@@ -4,7 +4,7 @@ var Option = function() {
     this.path_visible = false;
     this.show_volume = false;
     this.boy_velocity = 10;
-    this.girl_velocity = 15;
+    this.girl_timer = 15;
     this.volume_denom = 600;
     this.search_radius = 80;
 };
@@ -14,7 +14,7 @@ var option = new Option();
 gui.add(option, 'path_visible');
 gui.add(option, 'show_volume');
 gui.add(option, 'boy_velocity', 0, 10);
-gui.add(option, 'girl_velocity', 0, 20);
+gui.add(option, 'girl_timer', 0, 20);
 gui.add(option, 'volume_denom', 0, 848);
 
 
@@ -89,16 +89,17 @@ function create() {
     g.girl.anchor.setTo(.5);
     g.girl.sound = g.add.audio('talking');
     g.girl.sound.loopFull();
-    g.girl.timer = game.time.create(false);
-    g.girl.timer.loop(option.girl_velocity*1000, popupGirl);
-    g.girl.timer.start();
     g.girl.occupied = false;
     g.girl.hp = 3;
+    g.girl.timer = option.girl_timer * 1000;
     g.girl.alpha = 0;
-    popupGirl();
+    
+    g.girl.occupied = true;
+    g.girl.rnd = Math.floor(Math.random() * g.crates.length);
+    let dest = g.crates[g.girl.rnd];
+    g.girl.position = dest;
     
     g.collidable = [];
-//    g.collidable.push(g.girl);
     g.collidable.push(g.wall);
     g.collidable.push(g.bwall1);
     g.collidable.push(g.bwall2);
@@ -123,10 +124,14 @@ function create() {
     })
     
     displaySound();
+    
+    prevt = g.time.now;
+    curt = g.time.now;
 }
 
 function update() {
     getInput();
+    popupGirl();
     changeVolume();
     uiUpdate();
 }
@@ -143,7 +148,6 @@ function getInput(key) {
     
     if(inputEnable) {
         if(game.input.keyboard.isDown(Phaser.KeyCode.A)) {
-//        if(key.KeyCode == Phaser.KeyCode.A) {
             oldPosition = g.boy.position;
             var col = collideSearch({x:-v, y:0});
             console.log(col);
@@ -195,6 +199,7 @@ function getInput(key) {
                 showGirl.to({alpha: 0}, 500);
                 showGirl.start();
                 showGirl.onComplete.add(function() {
+                    g.girl.timer = option.girl_timer*1000;
                     g.occupied = false;
                     g.girl.rnd = Math.floor(Math.random() * g.crates.length);
                     let dest = g.crates[g.girl.rnd];
@@ -255,22 +260,31 @@ function collideSearch(nPos) {
 function popupGirl() {
     let g = game;
     
-    if(g.girl.occupied) {
-        g.crates[g.girl.rnd].destroy();
-        g.crates.splice(g.girl.rnd, 1);
-    }
+    prev = curt;
+    curt = g.time.now;
+    dt = curt - prev;
     
-    if(g.crates.length >= 1) {
-        g.girl.occupied = true;
+    g.girl.timer -= dt;
+    
+    if(g.girl.timer < 0) {
+        g.girl.timer = option.girl_timer * 1000;
+        if(g.girl.occupied) {
+            g.crates[g.girl.rnd].destroy();
+            g.crates.splice(g.girl.rnd, 1);
+        }
 
-        g.girl.rnd = Math.floor(Math.random() * g.crates.length);
-        let dest = g.crates[g.girl.rnd];
+        if(g.crates.length >= 1) {
+            g.girl.occupied = true;
 
-        g.girl.position = dest;
-    }
-    else {
-        g.girl.occupied = false;
-        console.log('you lost');
+            g.girl.rnd = Math.floor(Math.random() * g.crates.length);
+            let dest = g.crates[g.girl.rnd];
+
+            g.girl.position = dest;
+        }
+        else {
+            g.girl.occupied = false;
+            console.log('you lost');
+        }
     }
 }
 
@@ -286,9 +300,6 @@ function displaySound(path) {
     
     g.liner.clear();
     g.liner.lineStyle(2, 0x008800, 1);
-    // for(var i=0; i<path.length; i++) {
-    //     
-    // }
     line.reverse();
     g.liner.moveTo(line[0].x, line[0].y);
     for(var j=1;j<line.length;j++) {
@@ -432,8 +443,6 @@ function astar(coFrom, coTo) {
     openList.push(firstNode);
     
     while(openList.length > 0) {
-    //for(var num = 0; num < 1000; num++) {
-        // get the node having minimun of f-value from openlist.
         let current = openList.reduce(function(prev, cur) {
             return prev.f > cur.f ? cur : prev;
         });
