@@ -100,7 +100,6 @@ function create() {
     g.girl.position = dest;
     
     g.collidable = [];
-//    g.collidable.push(g.girl);
     g.collidable.push(g.wall);
     g.collidable.push(g.bwall1);
     g.collidable.push(g.bwall2);
@@ -149,7 +148,6 @@ function getInput(key) {
     
     if(inputEnable) {
         if(game.input.keyboard.isDown(Phaser.KeyCode.A)) {
-//        if(key.KeyCode == Phaser.KeyCode.A) {
             oldPosition = g.boy.position;
             var col = collideSearch({x:-v, y:0});
             console.log(col);
@@ -302,9 +300,6 @@ function displaySound(path) {
     
     g.liner.clear();
     g.liner.lineStyle(2, 0x008800, 1);
-    // for(var i=0; i<path.length; i++) {
-    //     
-    // }
     line.reverse();
     g.liner.moveTo(line[0].x, line[0].y);
     for(var j=1;j<line.length;j++) {
@@ -448,8 +443,6 @@ function astar(coFrom, coTo) {
     openList.push(firstNode);
     
     while(openList.length > 0) {
-    //for(var num = 0; num < 1000; num++) {
-        // get the node having minimun of f-value from openlist.
         let current = openList.reduce(function(prev, cur) {
             return prev.f > cur.f ? cur : prev;
         });
