@@ -206,7 +206,9 @@ function getInput(key) {
                     
                     g.girl.position = dest;
                 }, this);
+                ga('send', 'event', 'catch', 'click', 'catch');
             }
+            ga('send', 'event', 'catch', 'click', 'miss');
         }
     }
 }
