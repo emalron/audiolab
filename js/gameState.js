@@ -117,7 +117,7 @@ function create() {
         let y = i;
         let xarr = v.map(function(v2, i2) {
             let x = i2;
-            return {position: {x: i2, y:i}, type:v2, f:0, g:0, h:0, visited: undefined, parent: undefined};
+            return {position: {x: i2, y:i}, type:v2, f:0, g:0, h:0, closed: false, parent: undefined};
         })
         
         return xarr;
@@ -437,20 +437,18 @@ function astar(coFrom, coTo) {
     let closeList= [];
     let dx = [1, 1, 0, -1, -1, -1, 0, 1];
     let dy = [0, 1, 1, 1, 0, -1, -1, -1];
-    let ms = [10, 14, 10, 14, 10, 14, 10, 14];
-    let working = true;
+    let ms = [10, 14, 10, 14, 10, 14, 10, 14];    
     
-    openList.push(firstNode);
+    openList.pqpush(firstNode);
     
     while(openList.length > 0) {
-        let current = openList.reduce(function(prev, cur) {
-            return prev.f > cur.f ? cur : prev;
-        });
+        let current = openList[0];
 
         // remove the node from the openlist and add it the closelist.
-        let gid = openList.indexOf(current);
+        let gid = 0;
         openList.splice(gid,1);
         closeList.push(current);
+        current.closed = true;
                 
         // find adjacent nodes of the selected node
         for(var n=0;n<8;n++) {
@@ -464,7 +462,9 @@ function astar(coFrom, coTo) {
                     _node.h = (Math.abs(destNode.position.x - _node.position.x) + Math.abs(destNode.position.y - _node.position.y))*10;
                     _node.f = _node.g + _node.h;
                     _node.parent = current;
-                    openList.push(_node);
+                    
+                    // insert an item like priority queue
+                    openList.pqpush(_node);
                 }
                 else {
                     let prevG = current.g;
@@ -474,6 +474,11 @@ function astar(coFrom, coTo) {
                         _node.g = currentG + prevG;
                         _node.f = _node.g + _node.h;
                         _node.parent = current;
+                        
+                        // sort for the updated f values.
+                        openList.sort(function(a, b) {
+                            return a.f - b.f;
+                        })
                     }
                 }
             }
@@ -484,7 +489,6 @@ function astar(coFrom, coTo) {
         
         if(res != -1) {
             closeList.push(openList[res]);
-            working = false;
             break;
         }
 
