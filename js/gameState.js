@@ -123,8 +123,6 @@ function create() {
         return xarr;
     })
     
-    displaySound();
-    
     prevt = g.time.now;
     curt = g.time.now;
 }
@@ -442,7 +440,7 @@ function astar(coFrom, coTo) {
     let ms = [10, 14, 10, 14, 10, 14, 10, 14];    
     
     openList.pqpush(firstNode);
-    
+            
     while(openList.length > 0) {
         let current = openList[0];
 
@@ -458,7 +456,8 @@ function astar(coFrom, coTo) {
             let ny = current.position.y + dy[n];
             let _node = g.nodes[ny][nx];
             
-            if(_node.type != 1 && closeList.indexOf(_node) == -1) {
+            // changed the code to check if current node is in closeList
+            if(_node.type != 1 && _node.closed == false) {
                 if(openList.indexOf(_node) == -1) {
                     _node.g = ms[n] + current.g;
                     _node.h = (Math.abs(destNode.position.x - _node.position.x) + Math.abs(destNode.position.y - _node.position.y))*10;
@@ -491,10 +490,18 @@ function astar(coFrom, coTo) {
         
         if(res != -1) {
             closeList.push(openList[res]);
+            res.closed = true;
             break;
         }
-
     }
-
+    
+    // I didn't cleared the closed property in game.nodes. it made the path weird.
+    closeList.forEach((v) => {
+        let x = v.position.x;
+        let y = v.position.y;
+        
+        g.nodes[y][x].closed = false;
+    })
+    
     return closeList;
 }
